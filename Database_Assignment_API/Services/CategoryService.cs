@@ -6,16 +6,16 @@ using System.Linq.Expressions;
 
 namespace Database_Assignment_API.Services;
 
-public class AddressService
+public class CategoryService
 {
     private readonly DataContext _context;
 
-    public AddressService(DataContext context)
+    public CategoryService(DataContext context)
     {
         _context = context;
     }
 
-    public async Task CreateAsync(AddressEntity addressEntity)
+    public async Task CreateAsync(SubCategoryEntity categoryEntity)
     {
         try
         {
@@ -42,7 +42,7 @@ public class AddressService
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
     }
 
-    public async Task UpdateAsync(AddressEntity addressEntity)
+    public async Task UpdateAsync(SubCategoryEntity categoryEntity)
     {
         try
         {
@@ -51,7 +51,7 @@ public class AddressService
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
     }
 
-    public async Task DeleteAsync(AddressEntity addressEntity)
+    public async Task DeleteAsync(SubCategoryEntity categoryEntity)
     {
         try
         {
