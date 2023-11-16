@@ -1,5 +1,6 @@
 ﻿using Database_Assignment_API.Contexts;
 using Database_Assignment_API.Entites;
+using Microsoft.EntityFrameworkCore;
 
 namespace Database_Assignment_API.Repositories
 {
@@ -13,6 +14,15 @@ namespace Database_Assignment_API.Repositories
         public ProductRepository(DataContext context) : base(context)
         {
             _context = context;
+        }
+
+        public override async Task<IEnumerable<ProductEntity>> GetAllAsync()
+        {
+            return await _context.Products
+                .Include(x => x.Stock)
+                .Include(x => x.SubCategory)
+                .ThenInclude(x => x.PrimaryCategory)
+                .ToListAsync();
         }
     }
 }

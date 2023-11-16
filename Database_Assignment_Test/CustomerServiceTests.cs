@@ -51,7 +51,7 @@ public class CustomerServiceTests
             .ReturnsAsync(addressEntity);
 
         mockCustomerRepo
-            .Setup(repo => repo.CreatAsync(customerEntity))
+            .Setup(repo => repo.CreateAsync(customerEntity))
             .ReturnsAsync(customerEntity);
 
 

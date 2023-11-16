@@ -10,10 +10,10 @@ namespace Database_Assignment_API.Services;
 public interface ICustomerService
 {
     Task<bool> CreateAsync(ICustomerRegistration registration);
-    Task DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity);
     Task<IEnumerable<CustomerModel>> GetAllAsync();
-    Task<CustomerModel> GetOneAsync(CustomerModel customerModel);
-    Task UpdateAsync(CustomerEntity customerEntity, AddressEntity addressEntity);
+    Task<CustomerModel> GetOneAsync(Expression<Func<CustomerEntity, bool>> predicate);
+    Task<bool> UpdateAsync(CustomerEntity customerEntity, AddressEntity addressEntity);
+    Task<bool> DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity);
 }
 
 public class CustomerService : ICustomerService
@@ -34,7 +34,7 @@ public class CustomerService : ICustomerService
             if (!await _customerRepo.ExistsAsync(x => x.Email == registration.Email))
             {
                 var addressEntity = (await _addressRepo.GetAsync(x => x.StreetName == registration.StreetName && x.PostalCode == registration.PostalCode));
-                addressEntity ??= await _addressRepo.CreatAsync(new AddressEntity{ StreetName = registration.StreetName, StreetNumber = registration.StreetNumber, PostalCode = registration.PostalCode, City = registration.City});
+                addressEntity ??= await _addressRepo.CreateAsync(new AddressEntity{ StreetName = registration.StreetName, StreetNumber = registration.StreetNumber, PostalCode = registration.PostalCode, City = registration.City});
 
                 var customerEntity = new CustomerEntity
                 {
@@ -45,9 +45,10 @@ public class CustomerService : ICustomerService
                     AddressId = addressEntity.Id,
                 };
 
-                customerEntity = await _customerRepo.CreatAsync(customerEntity);
+                customerEntity = await _customerRepo.CreateAsync(customerEntity);
                 
                 return true;
+
             }
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
@@ -68,11 +69,11 @@ public class CustomerService : ICustomerService
         return null!;
     }
 
-    public async Task<CustomerModel> GetOneAsync(CustomerModel customerModel)
+    public async Task<CustomerModel> GetOneAsync(Expression<Func<CustomerEntity, bool>> predicate)
     {
         try
         {
-            var entity = await _customerRepo.GetAsync(x => x.Id == customerModel.Id);
+            var entity = await _customerRepo.GetAsync(predicate);
 
             var customer = new CustomerModel
             {
@@ -94,23 +95,28 @@ public class CustomerService : ICustomerService
         return null!;
     }
 
-    public async Task UpdateAsync(CustomerEntity customerEntity, AddressEntity addressEntity)
+    public async Task<bool> UpdateAsync(CustomerEntity customerEntity, AddressEntity addressEntity)
     {
         try
         {
             await _addressRepo.UpdateAsync(addressEntity);
             await _customerRepo.UpdateAsync(customerEntity);
+            return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
     }
 
-    public async Task DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity)
+    public async Task<bool> DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity)
     {
         try
         {
             await _customerRepo.DeleteAsync(customerEntity);
             await _addressRepo.DeleteAsync(addressEntity);
+            return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+        return false;
     }
 }

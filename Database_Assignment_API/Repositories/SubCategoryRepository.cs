@@ -17,6 +17,11 @@ namespace Database_Assignment_API.Repositories
             _context = context;
         }
 
+        public override async Task<IEnumerable<SubCategoryEntity>> GetAllAsync()
+        {
+            return await _context.SubCategories.Include(x => x.PrimaryCategory).ToListAsync();
+        }
+
         public override async Task<SubCategoryEntity> GetAsync(Expression<Func<SubCategoryEntity, bool>> expression)
         {
             var result = await base.GetAsync(expression);

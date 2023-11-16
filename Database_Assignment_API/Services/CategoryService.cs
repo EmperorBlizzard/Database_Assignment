@@ -7,59 +7,85 @@ using System.Linq.Expressions;
 
 namespace Database_Assignment_API.Services;
 
-public class CategoryService
+public interface ICategoryService
 {
-    private readonly SubCategoryRepository _subCategoryRepository;
+    Task<bool> CreateAsync(CategoryRegistration categoryRegistration);
+    Task<IEnumerable<CategoryModel>> GetAllAsync();
+    Task<bool> UpdateAsync(PrimaryCategoryEntity categoryEntity);
+    Task<bool> DeleteAsync(PrimaryCategoryEntity categoryEntity);
+}
+
+public class CategoryService : ICategoryService
+{
+    private readonly SubCategoryService _subCategoryService;
     private readonly PrimaryCategoryRepository _primaryCategoryRepository;
 
-    public CategoryService(SubCategoryRepository subCategoryRepository, PrimaryCategoryRepository primaryCategoryRepository)
+    public CategoryService(SubCategoryService subCategoryService, PrimaryCategoryRepository primaryCategoryRepository)
     {
-        _subCategoryRepository = subCategoryRepository;
+        _subCategoryService = subCategoryService;
         _primaryCategoryRepository = primaryCategoryRepository;
     }
 
-    public async Task CreateAsync(SubCategoryService categoryEntity)
+    public async Task<bool> CreateAsync(CategoryRegistration categoryRegistration)
     {
         try
         {
+            if (!await _primaryCategoryRepository.ExistsAsync(x => x.CategoryName == categoryRegistration.CategoryName))
+            {
+                var categoryEntity = new PrimaryCategoryEntity
+                {
+                    CategoryName = categoryRegistration.CategoryName
+                };
 
+                categoryEntity = await _primaryCategoryRepository.CreateAsync(categoryEntity);
+
+                return true;
+            }
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
     }
 
-    //public async Task<AddressModel> GetAllAsync()
-    //{
-    //    try
-    //    {
-
-    //    }
-    //    catch (Exception ex) { Debug.WriteLine(ex.Message); }
-    //}
-
-    //public async Task<IEnumerable<PrimaryCategoryEntity>> GetOneAsync(Expression<Func<AddressEntity, bool>> predicate)
-    //{
-    //    try
-    //    {
-
-    //    }
-    //    catch (Exception ex) { Debug.WriteLine(ex.Message); }
-    //}
-
-    public async Task UpdateAsync(SubCategoryService categoryEntity)
+    public async Task<IEnumerable<CategoryModel>> GetAllAsync()
     {
         try
         {
-
+            var categories = await _primaryCategoryRepository.GetAllAsync();
+            return categories.Select(x => new CategoryModel()).ToList();
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return null!;
     }
 
-    public async Task DeleteAsync(SubCategoryService categoryEntity)
+    public async Task<bool> UpdateAsync(PrimaryCategoryEntity categoryEntity)
     {
         try
         {
-
+            await _primaryCategoryRepository.UpdateAsync(categoryEntity);
+            return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
+    }
+
+    public async Task<bool> DeleteAsync(PrimaryCategoryEntity categoryEntity)
+    {
+        try
+        {
+            var categories = await _subCategoryService.GetOneAsync(x => x.PrimaryCategoryId == categoryEntity.Id);
+
+            if (categories == null)
+            {
+                await _primaryCategoryRepository.DeleteAsync(categoryEntity);
+
+                return true;
+            }
+        }
+        catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
     }
 }

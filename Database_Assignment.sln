@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database_Assignment_API", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database_Assignment_Test", "Database_Assignment_Test\Database_Assignment_Test.csproj", "{C4B651CE-9860-4591-8907-FDAF2D195B94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database_Assignment_ConsoleApp", "Database_Assignment_ConsoleApp\Database_Assignment_ConsoleApp.csproj", "{E8A0A47E-C3EB-4636-8F2D-6F71695A11EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C4B651CE-9860-4591-8907-FDAF2D195B94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4B651CE-9860-4591-8907-FDAF2D195B94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4B651CE-9860-4591-8907-FDAF2D195B94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8A0A47E-C3EB-4636-8F2D-6F71695A11EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8A0A47E-C3EB-4636-8F2D-6F71695A11EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8A0A47E-C3EB-4636-8F2D-6F71695A11EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8A0A47E-C3EB-4636-8F2D-6F71695A11EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

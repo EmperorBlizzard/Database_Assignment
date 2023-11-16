@@ -7,7 +7,7 @@ namespace Database_Assignment_API.Repositories;
 
 public interface IRepo<TEntity> where TEntity : class
 {
-    Task<TEntity> CreatAsync(TEntity entity);
+    Task<TEntity> CreateAsync(TEntity entity);
     Task<bool> DeleteAsync(TEntity entity);
     Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> expression);
     Task<IEnumerable<TEntity>> GetAllAsync();
@@ -24,7 +24,7 @@ public abstract class Repo<TEntity> : IRepo<TEntity> where TEntity : class
         _context = context;
     }
 
-    public virtual async Task<TEntity> CreatAsync(TEntity entity)
+    public virtual async Task<TEntity> CreateAsync(TEntity entity)
     {
         try
         {

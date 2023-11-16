@@ -10,10 +10,10 @@ namespace Database_Assignment_API.Services;
 public interface IProductService
 {
     Task<bool> CreateAsync(ProductRegistration productRegistration);
-    Task DeleteAsync(ProductEntity productEntity);
-    Task<ProductModel> GetAllAsync();
-    Task<IEnumerable<ProductModel>> GetOneAsync(Expression<Func<AddressEntity, bool>> predicate);
-    Task UpdateAsync(ProductEntity productEntity);
+    Task<IEnumerable<ProductModel>> GetAllAsync();
+    Task<ProductModel> GetOneAsync(Expression<Func<ProductEntity, bool>> predicate);
+    Task<bool> UpdateAsync(ProductEntity productEntity, InStockEntity stockEntity);
+    Task<bool> DeleteAsync(ProductEntity productEntity);
 }
 
 public class ProductService : IProductService
@@ -37,7 +37,7 @@ public class ProductService : IProductService
         {
             if (!await _productRepository.ExistsAsync(x => x.ArticleNumber == productRegistration.ArticleNumber))
             {
-                var stockId = (await _inStockRepository.CreatAsync(new InStockEntity { StockQuantity = productRegistration.StockQuantity })).Id;
+                var stockId = (await _inStockRepository.CreateAsync(new InStockEntity { StockQuantity = productRegistration.StockQuantity })).Id;
                 var subCategoryId = (await _subCategoryService.GetOneAsync(x => x.SubCategoryName == productRegistration.SubCategoryName)).Id;
 
                 var entity = new ProductEntity
@@ -50,49 +50,81 @@ public class ProductService : IProductService
                     SubCategoryId = subCategoryId
                 };
 
-                entity = await _productRepository.CreatAsync(entity);
+                entity = await _productRepository.CreateAsync(entity);
 
                 return true;
             }
 
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
         return false;
     }
 
-    public async Task<ProductModel> GetAllAsync()
+    public async Task<IEnumerable<ProductModel>> GetAllAsync()
     {
         try
         {
+            var products = await _productRepository.GetAllAsync();
 
+            return products.Select(x => new ProductModel()).ToList();
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return null!;
     }
 
-    public async Task<IEnumerable<ProductModel>> GetOneAsync(Expression<Func<AddressEntity, bool>> predicate)
+    public async Task<ProductModel> GetOneAsync(Expression<Func<ProductEntity, bool>> predicate)
     {
         try
         {
 
+            var entity = await _productRepository.GetAsync(predicate);
+
+
+            var customer = new ProductModel
+            {
+                ArticleNumber = entity.ArticleNumber,
+                Name = entity.Name,
+                Description = entity.Description,
+                StockPrice = entity.StockPrice,
+                StockQuantity = entity.Stock.StockQuantity,
+                SubCategoryName = entity.SubCategory.SubCategoryName,
+                CategoryName = entity.SubCategory.PrimaryCategory.CategoryName
+            };
+
+            return customer;
+
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return null!;
     }
 
-    public async Task UpdateAsync(ProductEntity productEntity)
+    public async Task<bool> UpdateAsync(ProductEntity productEntity, InStockEntity stockEntity)
     {
         try
         {
+            await _inStockRepository.UpdateAsync(stockEntity);
+            await _productRepository.UpdateAsync(productEntity);
 
+            return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
     }
 
-    public async Task DeleteAsync(ProductEntity productEntity)
+    public async Task<bool> DeleteAsync(ProductEntity productEntity)
     {
         try
         {
+            await _productRepository.DeleteAsync(productEntity);
 
+            return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
     }
 }
