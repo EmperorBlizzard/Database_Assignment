@@ -1,5 +1,6 @@
 using Database_Assignment_API.Contexts;
 using Database_Assignment_API.Repositories;
+using Database_Assignment_API.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,16 +12,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("Sql")));
-builder.Services.AddScoped<AddressRepository>();
-builder.Services.AddScoped<CustomerRepository>();
-builder.Services.AddScoped<CustomerInformationRepository>();
-builder.Services.AddScoped<CustomerInformationTypeRepository>();
-builder.Services.AddScoped<InStockRepository>();
-builder.Services.AddScoped<OrderRepository>();
-builder.Services.AddScoped<OrderRowRepository>();
-builder.Services.AddScoped<PrimaryCategoryRepository>();
-builder.Services.AddScoped<ProductRepository>();
-builder.Services.AddScoped<SubCategoryRepository>();
+
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IInStockRepository, InStockRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderRowRepository, OrderRowRepository>();
+builder.Services.AddScoped<IPrimaryCategoryRepository, PrimaryCategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
+
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<CategoryService>();
+
 
 var app = builder.Build();
 

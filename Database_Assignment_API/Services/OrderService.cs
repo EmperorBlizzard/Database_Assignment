@@ -24,23 +24,23 @@ public class OrderService
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
     }
 
-    public async Task<AddressModel> GetAllAsync()
-    {
-        try
-        {
+    //public async Task<AddressModel> GetAllAsync()
+    //{
+    //    try
+    //    {
 
-        }
-        catch (Exception ex) { Debug.WriteLine(ex.Message); }
-    }
+    //    }
+    //    catch (Exception ex) { Debug.WriteLine(ex.Message); }
+    //}
 
-    public async Task<IEnumerable<AddressModel>> GetOneAsync(Expression<Func<AddressEntity, bool>> predicate)
-    {
-        try
-        {
+    //public async Task<IEnumerable<AddressModel>> GetOneAsync(Expression<Func<AddressEntity, bool>> predicate)
+    //{
+    //    try
+    //    {
 
-        }
-        catch (Exception ex) { Debug.WriteLine(ex.Message); }
-    }
+    //    }
+    //    catch (Exception ex) { Debug.WriteLine(ex.Message); }
+    //}
 
     public async Task UpdateAsync(OrderEntity orderEntity)
     {

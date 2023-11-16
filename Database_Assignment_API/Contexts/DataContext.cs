@@ -10,28 +10,20 @@ public class DataContext : DbContext
     {
     }
 
-    DbSet<AddressEntity> Addresses { get; set; }
-    DbSet<CustomerEntity> Customers { get; set; }
-    DbSet<CustomerInformationEntity> CustomerInformations { get; set; }
-    DbSet<CustomerInformationTypeEntity> CustomerInformationTypes { get; set;}
-    DbSet<InStockEntity> InStock { get; set; }
-    DbSet<OrderEntity> Orders { get; set; }
-    DbSet<OrderRowEntity> OrderRows { get; set; }
-    DbSet<PrimaryCategoryEntity> PrimaryCategories { get; set; }
-    DbSet<SubCategoryEntity> SubCategories { get; set; }
-    DbSet<ProductEntity> Products { get; set; }
-    DbSet<InvoiceEntity> Invoices { get; set; }
-    DbSet<InvoiceLineEntity> InvoiceLines { get; set; }
+    public DbSet<AddressEntity> Addresses { get; set; }
+    public DbSet<CustomerEntity> Customers { get; set; }
+    public DbSet<InStockEntity> InStock { get; set; }
+    public DbSet<OrderEntity> Orders { get; set; }
+    public DbSet<OrderRowEntity> OrderRows { get; set; }
+    public DbSet<PrimaryCategoryEntity> PrimaryCategories { get; set; }
+    public DbSet<SubCategoryEntity> SubCategories { get; set; }
+    public DbSet<ProductEntity> Products { get; set; }
+    public DbSet<InvoiceEntity> Invoices { get; set; }
+    public DbSet<InvoiceLineEntity> InvoiceLines { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<CustomerInformationEntity>().HasKey(x => new
-        {
-            x.CustomerId,
-            x.TypeId
-        });
-
         modelBuilder.Entity<OrderRowEntity>().HasKey(x => new
         {
             x.OrderId,

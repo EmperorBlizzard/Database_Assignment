@@ -5,7 +5,17 @@ using System.Linq.Expressions;
 
 namespace Database_Assignment_API.Repositories;
 
-public abstract class Repo<TEntity> where TEntity : class
+public interface IRepo<TEntity> where TEntity : class
+{
+    Task<TEntity> CreatAsync(TEntity entity);
+    Task<bool> DeleteAsync(TEntity entity);
+    Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> expression);
+    Task<IEnumerable<TEntity>> GetAllAsync();
+    Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> expression);
+    Task<TEntity> UpdateAsync(TEntity entity);
+}
+
+public abstract class Repo<TEntity> : IRepo<TEntity> where TEntity : class
 {
     private readonly DataContext _context;
 
@@ -18,7 +28,7 @@ public abstract class Repo<TEntity> where TEntity : class
     {
         try
         {
-            _context.Set<TEntity>().Add(entity);
+            await _context.Set<TEntity>().AddAsync(entity);
             await _context.SaveChangesAsync();
             return entity ?? null!;
         }
