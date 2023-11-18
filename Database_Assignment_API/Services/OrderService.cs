@@ -13,7 +13,6 @@ public interface IOrderService
     Task<OrderRowEntity> CreateOrderRowAsync(OrderEntity orderEntity, OrderRowRegistration orderRowRegistration);
     Task<IEnumerable<OrderModel>> GetAllAsync();
     Task<OrderModel> GetOneAsync(Expression<Func<OrderEntity, bool>> predicate);
-    Task<bool> UpdateOrderRowQuantityAsync(OrderRowEntity orderRowEntity, OrderRowRegistration orderRowRegistration);
     Task<bool> DeleteAsync(OrderModel orderModel);
 }
 
@@ -57,13 +56,7 @@ public class OrderService : IOrderService
                 }
                 else
                 {
-                    var orderRowEntity = await GetOneRowAsync(x => x.ProductArticleNumber == orderRow.ProductArticleNumber && x.OrderId == orderEntity.Id);
-                    var result = await UpdateOrderRowQuantityAsync(orderRowEntity, orderRow);
-
-                    if (result != true)
-                    {
-                        result = false;
-                    }
+                    return false;
                 }
             }
 
@@ -159,19 +152,6 @@ public class OrderService : IOrderService
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return null!;
-    }
-
-    public async Task<bool> UpdateOrderRowQuantityAsync(OrderRowEntity orderRowEntity, OrderRowRegistration orderRowRegistration)
-    {
-        try
-        {
-            orderRowEntity.Quantity += orderRowRegistration.Quantity;
-            await _orderRowRepository.UpdateAsync(orderRowEntity);
-            return true;
-        }
-        catch (Exception ex) { Debug.WriteLine(ex.Message); }
-
-        return false;
     }
 
     public async Task<bool> DeleteAsync(OrderModel orderModel)
