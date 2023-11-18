@@ -12,8 +12,10 @@ public interface IProductService
     Task<bool> CreateAsync(ProductRegistration productRegistration);
     Task<IEnumerable<ProductModel>> GetAllAsync();
     Task<ProductModel> GetOneAsync(Expression<Func<ProductEntity, bool>> predicate);
-    Task<bool> UpdateAsync(ProductEntity productEntity, InStockEntity stockEntity);
-    Task<bool> DeleteAsync(ProductEntity productEntity);
+    Task<bool> UpdateAsync(ProductModel productModel);
+    Task<bool> UpdateStockAsync(ProductModel productModel);
+    Task<bool> DeleteAsync(ProductModel productModel);
+    Task<bool> ExistsAsync(Expression<Func<ProductEntity, bool>> predicate);
 }
 
 public class ProductService : IProductService
@@ -101,11 +103,18 @@ public class ProductService : IProductService
         return null!;
     }
 
-    public async Task<bool> UpdateAsync(ProductEntity productEntity, InStockEntity stockEntity)
+    public async Task<bool> UpdateAsync(ProductModel productModel)
     {
         try
         {
-            await _inStockRepository.UpdateAsync(stockEntity);
+            var productEntity = new ProductEntity
+            {
+                ArticleNumber = productModel.ArticleNumber,
+                Name = productModel.Name,
+                Description = productModel.Description,
+                StockPrice = productModel.StockPrice,
+            };
+
             await _productRepository.UpdateAsync(productEntity);
 
             return true;
@@ -115,11 +124,17 @@ public class ProductService : IProductService
         return false;
     }
 
-    public async Task<bool> DeleteAsync(ProductEntity productEntity)
+    public async Task<bool> UpdateStockAsync(ProductModel productModel)
     {
         try
         {
-            await _productRepository.DeleteAsync(productEntity);
+            var stockEntity = new InStockEntity
+            {
+                Id = productModel.StockId,
+                StockQuantity = productModel.StockQuantity,
+            };
+
+            await _inStockRepository.UpdateAsync(stockEntity);
 
             return true;
         }
@@ -127,4 +142,46 @@ public class ProductService : IProductService
 
         return false;
     }
+
+    public async Task<bool> DeleteAsync(ProductModel productModel)
+    {
+        try
+        {
+            var productEntity = new ProductEntity
+            {
+                ArticleNumber = productModel.ArticleNumber,
+                Name = productModel.Name,
+                Description = productModel.Description,
+                StockPrice = productModel.StockPrice,
+            };
+
+            var stockEntity = new InStockEntity
+            {
+                Id = productModel.StockId,
+                StockQuantity = productModel.StockQuantity
+            };
+
+            await _productRepository.DeleteAsync(productEntity);
+            await _inStockRepository.DeleteAsync(stockEntity);
+            return true;
+        }
+        catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
+    }
+
+    public async Task<bool> ExistsAsync(Expression<Func<ProductEntity, bool>> predicate)
+    {
+        try
+        {
+            if(await _productRepository.ExistsAsync(predicate))
+            {
+                return true;
+            }
+        }
+        catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+        return false;
+    }
+
 }

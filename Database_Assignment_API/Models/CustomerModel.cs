@@ -7,6 +7,7 @@ public class CustomerModel
     public string LastName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? PhoneNumber { get; set; }
+    public int AddressId { get; set; }
     public string StreetName { get; set; } = null!;
     public string? StreetNumber { get; set; }
     public string PostalCode { get; set; } = null!;

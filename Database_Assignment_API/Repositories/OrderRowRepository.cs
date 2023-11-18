@@ -1,5 +1,7 @@
 ﻿using Database_Assignment_API.Contexts;
 using Database_Assignment_API.Entites;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Database_Assignment_API.Repositories
 {
@@ -13,6 +15,19 @@ namespace Database_Assignment_API.Repositories
         public OrderRowRepository(DataContext context) : base(context)
         {
             _context = context;
+        }
+
+        public override async Task<IEnumerable<OrderRowEntity>> GetAllAsync()
+        {
+            return await _context.OrderRows.Include(x => x.Order).ToListAsync();
+        }
+
+
+
+
+        public override async Task<OrderRowEntity> GetAsync(Expression<Func<OrderRowEntity, bool>> expression)
+        {
+            return await base.GetAsync(expression);
         }
     }
 }

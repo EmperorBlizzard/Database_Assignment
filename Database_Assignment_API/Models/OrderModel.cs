@@ -11,8 +11,5 @@ public class OrderModel
 
     public string CustomerEmail { get; set; } = null!;
 
-    public string ProductArticleNumber { get; set; } = null!;
-
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
+    public List<OrderRowModel> Rows { get; set; } = new List<OrderRowModel>();
 }

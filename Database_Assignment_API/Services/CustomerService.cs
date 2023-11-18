@@ -12,8 +12,9 @@ public interface ICustomerService
     Task<bool> CreateAsync(ICustomerRegistration registration);
     Task<IEnumerable<CustomerModel>> GetAllAsync();
     Task<CustomerModel> GetOneAsync(Expression<Func<CustomerEntity, bool>> predicate);
-    Task<bool> UpdateAsync(CustomerEntity customerEntity, AddressEntity addressEntity);
-    Task<bool> DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity);
+    Task<bool> UpdateAsync(CustomerModel customerModel);
+    Task<bool> DeleteAsync(CustomerModel customerModel);
+    Task<bool> ExistsAsync(Expression<Func<CustomerEntity, bool>> predicate);
 }
 
 public class CustomerService : ICustomerService
@@ -42,7 +43,7 @@ public class CustomerService : ICustomerService
                     LastName = registration.LastName,
                     Email = registration.Email,
                     PhoneNumber = registration.PhoneNumber,
-                    AddressId = addressEntity.Id,
+                    AddressId = addressEntity.Id
                 };
 
                 customerEntity = await _customerRepo.CreateAsync(customerEntity);
@@ -74,47 +75,106 @@ public class CustomerService : ICustomerService
         try
         {
             var entity = await _customerRepo.GetAsync(predicate);
-
-            var customer = new CustomerModel
+            
+            if (entity != null)
             {
-                Id = entity.Id,
-                FirstName = entity.FirstName,
-                LastName = entity.LastName,
-                Email = entity.Email,
-                PhoneNumber = entity.PhoneNumber,
-                StreetName = entity.Address.StreetName,
-                StreetNumber = entity.Address.StreetNumber,
-                PostalCode = entity.Address.PostalCode,
-                City = entity.Address.City
-            };
+                var customer = new CustomerModel
+                {
+                    Id = entity.Id,
+                    FirstName = entity.FirstName,
+                    LastName = entity.LastName,
+                    Email = entity.Email,
+                    PhoneNumber = entity.PhoneNumber,
+                    AddressId = entity.AddressId,
+                    StreetName = entity.Address.StreetName,
+                    StreetNumber = entity.Address.StreetNumber,
+                    PostalCode = entity.Address.PostalCode,
+                    City = entity.Address.City
+                };
 
-            return customer;
+                return customer;
+            }
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return null!;
     }
 
-    public async Task<bool> UpdateAsync(CustomerEntity customerEntity, AddressEntity addressEntity)
+    public async Task<bool> UpdateAsync(CustomerModel customerModel)
     {
         try
         {
-            await _addressRepo.UpdateAsync(addressEntity);
-            await _customerRepo.UpdateAsync(customerEntity);
-            return true;
+            if( await _customerRepo.ExistsAsync(x => x.Email == customerModel.Email))
+            {
+                var customerEntity = new CustomerEntity
+                {
+                    Id = customerModel.Id,
+                    FirstName = customerModel.FirstName,
+                    LastName = customerModel.LastName,
+                    Email = customerModel.Email,
+                    PhoneNumber = customerModel.PhoneNumber
+                };
+
+                var addressEntity = new AddressEntity
+                {
+                    Id = customerModel.AddressId,
+                    StreetName = customerModel.StreetName,
+                    StreetNumber = customerModel.StreetNumber,
+                    PostalCode = customerModel.PostalCode,
+                    City = customerModel.City
+                };
+
+
+                await _addressRepo.UpdateAsync(addressEntity);
+                await _customerRepo.UpdateAsync(customerEntity);
+                return true;
+            }
+
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return false;
     }
 
-    public async Task<bool> DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity)
+    public async Task<bool> DeleteAsync(CustomerModel customerModel)
     {
         try
         {
+            var customerEntity = new CustomerEntity
+            {
+                Id = customerModel.Id,
+                FirstName = customerModel.FirstName,
+                LastName = customerModel.LastName,
+                Email = customerModel.Email,
+                PhoneNumber = customerModel.PhoneNumber
+            };
+
+            var addressEntity = new AddressEntity
+            {
+                Id = customerModel.AddressId,
+                StreetName = customerModel.StreetName,
+                StreetNumber = customerModel.StreetNumber,
+                PostalCode = customerModel.PostalCode,
+                City = customerModel.City
+            };
+
             await _customerRepo.DeleteAsync(customerEntity);
             await _addressRepo.DeleteAsync(addressEntity);
             return true;
+        }
+        catch (Exception ex) { Debug.WriteLine(ex.Message); }
+        return false;
+    }
+
+    public async Task<bool> ExistsAsync(Expression<Func<CustomerEntity, bool>> predicate)
+    {
+        try
+        {
+            if (await _customerRepo.ExistsAsync(predicate))
+            {
+                return true;
+            }
+            
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
         return false;

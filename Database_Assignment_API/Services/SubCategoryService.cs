@@ -11,8 +11,8 @@ public interface ISubCategoryService
     Task<bool> CreateAsync(SubCategoryRegistration subCategoryRegistration);
     Task<IEnumerable<SubCategoryModel>> GetAllAsync();
     Task<SubCategoryModel> GetOneAsync(Expression<Func<SubCategoryEntity, bool>> predicate);
-    Task<bool> UpdateAsync(SubCategoryEntity categoryEntity);
-    Task<bool> DeleteAsync(SubCategoryEntity categoryEntity);
+    Task<bool> UpdateAsync(SubCategoryModel subCategoryModel);
+    Task<bool> DeleteAsync(SubCategoryModel subCategoryModel);
 }
 
 public class SubCategoryService : ISubCategoryService
@@ -77,11 +77,18 @@ public class SubCategoryService : ISubCategoryService
         return null!;
     }
 
-    public async Task<bool> UpdateAsync(SubCategoryEntity categoryEntity)
+    public async Task<bool> UpdateAsync(SubCategoryModel subCategoryModel)
     {
         try
         {
-            await _subCategoryRepository.UpdateAsync(categoryEntity);
+            var subCategoryEntity = new SubCategoryEntity
+            {
+                Id= subCategoryModel.Id,
+                SubCategoryName= subCategoryModel.SubCategoryName,
+                PrimaryCategoryId = subCategoryModel.PrimaryCategoryId,
+            };
+
+            await _subCategoryRepository.UpdateAsync(subCategoryEntity);
             return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
@@ -89,11 +96,18 @@ public class SubCategoryService : ISubCategoryService
         return false;
     }
 
-    public async Task<bool> DeleteAsync(SubCategoryEntity categoryEntity)
+    public async Task<bool> DeleteAsync(SubCategoryModel subCategoryModel)
     {
         try
         {
-            await _subCategoryRepository.DeleteAsync(categoryEntity);
+            var subCategoryEntity = new SubCategoryEntity
+            {
+                Id = subCategoryModel.Id,
+                SubCategoryName = subCategoryModel.SubCategoryName,
+                PrimaryCategoryId = subCategoryModel.PrimaryCategoryId,
+            };
+
+            await _subCategoryRepository.DeleteAsync(subCategoryEntity);
             return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
