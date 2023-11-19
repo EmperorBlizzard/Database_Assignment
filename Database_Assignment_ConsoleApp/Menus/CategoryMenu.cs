@@ -1,14 +1,15 @@
-﻿using Database_Assignment_API.Models;
+﻿using Database_Assignment_API.Entites;
+using Database_Assignment_API.Models;
 using Database_Assignment_API.Services;
 
 namespace Database_Assignment_ConsoleApp.Menus;
 
-internal class CategoryMenu
+public class CategoryMenu
 {
-    private readonly SubCategoryService _subCategoryService;
-    private readonly CategoryService _categoryService;
+    private readonly ISubCategoryService _subCategoryService;
+    private readonly ICategoryService _categoryService;
 
-    public CategoryMenu(SubCategoryService subCategoryService, CategoryService categoryService)
+    public CategoryMenu(ISubCategoryService subCategoryService, ICategoryService categoryService)
     {
         _subCategoryService = subCategoryService;
         _categoryService = categoryService;
@@ -68,14 +69,14 @@ internal class CategoryMenu
 
         foreach (var category in categories)
         {
-            Console.WriteLine($"Primary category: {category.CategoryName} - Sub Category {category.SubCategoryName}");
+            Console.WriteLine($"Primary category: {category.PrimaryCategory.CategoryName} - Subcategory: {category.SubCategoryName}");
         }
 
         Console.WriteLine();
         Console.WriteLine("1. Edit PrimaryCategory");
         Console.WriteLine("2. Edit SubCategory");
         Console.WriteLine("0. Go Back");
-        Console.Write("Choice");
+        Console.Write("Choice: ");
         var option = Console.ReadLine()!.ToLower();
 
         switch (option)
@@ -101,11 +102,11 @@ internal class CategoryMenu
         Console.Write("Primary Category Name: ");
         var primaryCategoryName = Console.ReadLine();
 
-        CategoryModel categoryModel = await _categoryService.GetOneAsync(x => x.CategoryName == primaryCategoryName);
+        var categoryEntity = await _categoryService.GetOneAsync(x => x.CategoryName == primaryCategoryName);
 
-        if (categoryModel != null)
+        if (categoryEntity != null)
         {
-            Console.WriteLine($"Category: {categoryModel.CategoryName}");
+            Console.WriteLine($"Category: {categoryEntity.CategoryName}");
             Console.WriteLine($"");
 
             Console.WriteLine("1. Edit Category");
@@ -118,11 +119,11 @@ internal class CategoryMenu
             switch (option)
             {
                 case "1":
-                    await EditPrimaryCategoryAsync(categoryModel);
+                    await EditPrimaryCategoryAsync(categoryEntity);
                     break;
 
                 case "2":
-                    await DeletePrimaryCategoryAsync(categoryModel);
+                    await DeletePrimaryCategoryAsync(categoryEntity);
                     break;
 
                 case "0":
@@ -135,18 +136,18 @@ internal class CategoryMenu
         }
     }
 
-    public async Task EditPrimaryCategoryAsync(CategoryModel categoryModel)
+    public async Task EditPrimaryCategoryAsync(PrimaryCategoryEntity primaryCategoryEntity)
     {
         Console.WriteLine("----Edit----");
 
         Console.Write(" Primary Category Name: ");
-        categoryModel.CategoryName = Console.ReadLine()!;
+        primaryCategoryEntity.CategoryName = Console.ReadLine()!;
 
-        var result = await _categoryService.UpdateAsync(categoryModel);
+        var result = await _categoryService.UpdateAsync(primaryCategoryEntity);
 
         if (result == true)
         {
-            Console.WriteLine("Customer Updated");
+            Console.WriteLine("Category Updated");
         }
         else
         {
@@ -156,18 +157,18 @@ internal class CategoryMenu
         Console.ReadKey();
     }
 
-    public async Task DeletePrimaryCategoryAsync(CategoryModel categoryModel)
+    public async Task DeletePrimaryCategoryAsync(PrimaryCategoryEntity primaryCategoryEntity)
     {
         Console.Write("Are you sure y/n: ");
         var option = Console.ReadLine()!.ToLower();
 
         if (option == "y")
         {
-            var result = await _categoryService.DeleteAsync(categoryModel);
+            var result = await _categoryService.DeleteAsync(primaryCategoryEntity);
 
             if (result == true)
             {
-                Console.WriteLine("Customer delete");
+                Console.WriteLine("Category delete");
             }
             else
             {
@@ -184,11 +185,11 @@ internal class CategoryMenu
         Console.Write("Sub Category Name: ");
         var subCategoryName = Console.ReadLine();
 
-        SubCategoryModel subCategoryModel = await _subCategoryService.GetOneAsync(x => x.SubCategoryName == subCategoryName);
+        var subCategoryEntity = await _subCategoryService.GetOneAsync(x => x.SubCategoryName == subCategoryName);
 
-        if (subCategoryModel != null)
+        if (subCategoryEntity != null)
         {
-            Console.WriteLine($"Category: {subCategoryModel.CategoryName} - {subCategoryModel.SubCategoryName}");
+            Console.WriteLine($"Category: {subCategoryEntity.PrimaryCategory.CategoryName} - {subCategoryEntity.SubCategoryName}");
             Console.WriteLine($"");
 
             Console.WriteLine("1. Edit Subcategory");
@@ -201,11 +202,11 @@ internal class CategoryMenu
             switch (option)
             {
                 case "1":
-                    await EditSubCategoryAsync(subCategoryModel);
+                    await EditSubCategoryAsync(subCategoryEntity);
                     break;
 
                 case "2":
-                    await DeleteSubCategoryAsync(subCategoryModel);
+                    await DeleteSubCategoryAsync(subCategoryEntity);
                     break;
 
                 case "0":
@@ -217,44 +218,44 @@ internal class CategoryMenu
             }
         }
     }
-    public async Task EditSubCategoryAsync(SubCategoryModel subCategoryModel)
+    public async Task EditSubCategoryAsync(SubCategoryEntity subCategoryEntity)
     {
         Console.WriteLine("----Edit----");
 
         Console.Write(" SubCategory Name: ");
-        subCategoryModel.SubCategoryName = Console.ReadLine()!;
+        subCategoryEntity.SubCategoryName = Console.ReadLine()!;
 
         Console.Write("Primary Category: ");
-        var primaryCategory = Console.ReadLine()!;
+        subCategoryEntity.PrimaryCategory.CategoryName = Console.ReadLine()!;
 
-        subCategoryModel.PrimaryCategoryId = (await _categoryService.GetOneAsync(x => x.CategoryName == primaryCategory)).Id;
+        subCategoryEntity.PrimaryCategoryId = (await _categoryService.GetOneAsync(x => x.CategoryName == subCategoryEntity.PrimaryCategory.CategoryName)).Id;
 
-        var result = await _subCategoryService.UpdateAsync(subCategoryModel);
+        var result = await _subCategoryService.UpdateAsync(subCategoryEntity);
 
         if (result == true)
         {
-            Console.WriteLine("Customer Updated");
+            Console.WriteLine("Category Updated");
         }
         else
         {
-            Console.WriteLine("Something went wrong / Email already exist");
+            Console.WriteLine("Something went wrong");
         }
 
         Console.ReadKey();
     }
 
-    public async Task DeleteSubCategoryAsync(SubCategoryModel subCategoryModel)
+    public async Task DeleteSubCategoryAsync(SubCategoryEntity subCategoryEntity)
     {
         Console.Write("Are you sure y/n: ");
         var option = Console.ReadLine()!.ToLower();
 
         if (option == "y")
         {
-            var result = await _subCategoryService.DeleteAsync(subCategoryModel);
+            var result = await _subCategoryService.DeleteAsync(subCategoryEntity);
 
             if (result == true)
             {
-                Console.WriteLine("Customer delete");
+                Console.WriteLine("Category delete");
             }
             else
             {
@@ -278,7 +279,7 @@ internal class CategoryMenu
 
         if (result == true)
         {
-            Console.WriteLine("Product created");
+            Console.WriteLine("Category created");
         }
         else
         {
@@ -304,7 +305,7 @@ internal class CategoryMenu
 
         if (result == true)
         {
-            Console.WriteLine("Product created");
+            Console.WriteLine("SubCategory created");
         }
         else
         {

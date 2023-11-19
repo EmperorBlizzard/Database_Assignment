@@ -10,17 +10,18 @@ namespace Database_Assignment_API.Services;
 public interface ICategoryService
 {
     Task<bool> CreateAsync(CategoryRegistration categoryRegistration);
-    Task<IEnumerable<CategoryModel>> GetAllAsync();
-    Task<bool> UpdateAsync(CategoryModel categoryModel);
-    Task<bool> DeleteAsync(CategoryModel categoryModel);
+    Task<IEnumerable<PrimaryCategoryEntity>> GetAllAsync();
+    Task<PrimaryCategoryEntity> GetOneAsync(Expression<Func<PrimaryCategoryEntity, bool>> predicate);
+    Task<bool> UpdateAsync(PrimaryCategoryEntity categoryEntity);
+    Task<bool> DeleteAsync(PrimaryCategoryEntity categoryEntity);
 }
 
 public class CategoryService : ICategoryService
 {
-    private readonly SubCategoryService _subCategoryService;
-    private readonly PrimaryCategoryRepository _primaryCategoryRepository;
+    private readonly ISubCategoryService _subCategoryService;
+    private readonly IPrimaryCategoryRepository _primaryCategoryRepository;
 
-    public CategoryService(SubCategoryService subCategoryService, PrimaryCategoryRepository primaryCategoryRepository)
+    public CategoryService(ISubCategoryService subCategoryService, IPrimaryCategoryRepository primaryCategoryRepository)
     {
         _subCategoryService = subCategoryService;
         _primaryCategoryRepository = primaryCategoryRepository;
@@ -47,29 +48,25 @@ public class CategoryService : ICategoryService
         return false;
     }
 
-    public async Task<IEnumerable<CategoryModel>> GetAllAsync()
+    public async Task<IEnumerable<PrimaryCategoryEntity>> GetAllAsync()
     {
         try
         {
             var categories = await _primaryCategoryRepository.GetAllAsync();
-            return categories.Select(x => new CategoryModel()).ToList();
+            
+
+            return categories;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return null!;
     }
 
-    public async Task<CategoryModel> GetOneAsync(Expression<Func<PrimaryCategoryEntity, bool>> predicate)
+    public async Task<PrimaryCategoryEntity> GetOneAsync(Expression<Func<PrimaryCategoryEntity, bool>> predicate)
     {
         try
         {
-            var categoryEntity = await _primaryCategoryRepository.GetAsync(predicate);
-
-            var category = new CategoryModel
-            {
-                Id = categoryEntity.Id,
-                CategoryName = categoryEntity.CategoryName,
-            };
+            var category = await _primaryCategoryRepository.GetAsync(predicate);
 
             return category;
         }
@@ -78,16 +75,10 @@ public class CategoryService : ICategoryService
         return null!;
     }
 
-    public async Task<bool> UpdateAsync(CategoryModel categoryModel)
+    public async Task<bool> UpdateAsync(PrimaryCategoryEntity categoryEntity)
     {
         try
         {
-            var categoryEntity = new PrimaryCategoryEntity
-            {
-                Id = categoryModel.Id,
-                CategoryName = categoryModel.CategoryName,
-            };
-
             await _primaryCategoryRepository.UpdateAsync(categoryEntity);
             return true;
         }
@@ -96,20 +87,14 @@ public class CategoryService : ICategoryService
         return false;
     }
 
-    public async Task<bool> DeleteAsync(CategoryModel categoryModel)
+    public async Task<bool> DeleteAsync(PrimaryCategoryEntity categoryEntity)
     {
         try
         {
-            var categories = await _subCategoryService.GetOneAsync(x => x.PrimaryCategoryId == categoryModel.Id);
+            var categories = await _subCategoryService.GetOneAsync(x => x.PrimaryCategoryId == categoryEntity.Id);
 
             if (categories == null)
             {
-                var categoryEntity = new PrimaryCategoryEntity
-                {
-                    Id = categoryModel.Id,
-                    CategoryName = categoryModel.CategoryName,
-                };
-
                 await _primaryCategoryRepository.DeleteAsync(categoryEntity);
 
                 return true;

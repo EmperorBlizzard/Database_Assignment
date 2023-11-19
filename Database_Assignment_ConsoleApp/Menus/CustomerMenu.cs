@@ -4,11 +4,11 @@ using Database_Assignment_API.Services;
 
 namespace Database_Assignment_ConsoleApp.Menus;
 
-internal class CustomerMenu
+public class CustomerMenu
 {
-    private readonly CustomerService _customerService;
+    private readonly ICustomerService _customerService;
 
-    public CustomerMenu(CustomerService customerService)
+    public CustomerMenu(ICustomerService customerService)
     {
         _customerService = customerService;
     }
@@ -59,18 +59,26 @@ internal class CustomerMenu
 
         var customers = await _customerService.GetAllAsync();
 
-        foreach (var customer in customers)
+        if (customers != null)
         {
-            Console.WriteLine($"{customer.FirstName} {customer.LastName} - {customer.Email}");   
+            foreach (var customer in customers)
+            {
+                Console.WriteLine($"{customer.FirstName} {customer.LastName} - {customer.Email}");
+            }
+
+            Console.WriteLine();
+            Console.Write("Do you want to check details on a customer y/n: ");
+            var option = Console.ReadLine()!.ToLower();
+
+            if (option == "y")
+            {
+                await ViewOneCustomerAsync();
+            }
         }
-
-        Console.WriteLine();
-        Console.Write("Do you want to check details on a customer y/n: ");
-        var option = Console.ReadLine()!.ToLower();
-
-        if (option == "y")
+        else
         {
-            await ViewOneCustomerAsync();
+            Console.WriteLine("No Customers In system");
+            Console.ReadKey();
         }
     }
 
@@ -79,15 +87,15 @@ internal class CustomerMenu
         Console.Write("Customers email: ");
         var customerEmail = Console.ReadLine();
 
-        CustomerModel customer = await _customerService.GetOneAsync(x => x.Email ==  customerEmail);
+        var customer = await _customerService.GetOneAsync(x => x.Email ==  customerEmail);
 
         if (customer != null)
         {
             Console.WriteLine($"Name: {customer.FirstName} {customer.LastName}");
             Console.WriteLine($"Email: {customer.Email}");
             Console.WriteLine($"Phone number: {customer.PhoneNumber}");
-            Console.WriteLine($"Address: {customer.StreetName} {customer.StreetNumber} - {customer.City}");
-            Console.WriteLine($"Postal Code: {customer.PostalCode}");
+            Console.WriteLine($"Address: {customer.Address.StreetName} {customer.Address.StreetNumber} - {customer.Address.City}");
+            Console.WriteLine($"Postal Code: {customer.Address.PostalCode}");
             Console.WriteLine($"");
 
             Console.WriteLine("1. Edit Customer");
@@ -117,33 +125,33 @@ internal class CustomerMenu
         }
     }
 
-    public async Task EditCustomerAsync(CustomerModel customer)
+    public async Task EditCustomerAsync(CustomerEntity customer)
     {
         Console.WriteLine("----Edit----");
 
-        Console.WriteLine("First Name: ");
+        Console.Write("First Name: ");
         customer.FirstName = Console.ReadLine()!;
 
-        Console.WriteLine("Last Name: ");
+        Console.Write("Last Name: ");
         customer.LastName = Console.ReadLine()!;
 
-        Console.WriteLine("Email: ");
+        Console.Write("Email: ");
         customer.Email = Console.ReadLine()!;
 
-        Console.WriteLine("Phone Number: ");
+        Console.Write("Phone Number: ");
         customer.PhoneNumber = Console.ReadLine()!;
 
-        Console.WriteLine("Street Name: ");
-        customer.StreetName = Console.ReadLine()!;
+        Console.Write("Street Name: ");
+        customer.Address.StreetName = Console.ReadLine()!;
 
-        Console.WriteLine("Street Number: ");
-        customer.StreetNumber = Console.ReadLine()!;
+        Console.Write("Street Number: ");
+        customer.Address.StreetNumber = Console.ReadLine()!;
 
-        Console.WriteLine("Postal Code: ");
-        customer.PostalCode = Console.ReadLine()!;
+        Console.Write("Postal Code: ");
+        customer.Address.PostalCode = Console.ReadLine()!;
 
-        Console.WriteLine("City: ");
-        customer.City = Console.ReadLine()!;
+        Console.Write("City: ");
+        customer.Address.City = Console.ReadLine()!;
 
         var result = await _customerService.UpdateAsync(customer);
 
@@ -153,20 +161,29 @@ internal class CustomerMenu
         }
         else
         {
-            Console.WriteLine("Something went wrong / Email already exist");
+            Console.WriteLine("Something went wrong");
         }
 
         Console.ReadKey();
     }
 
-    public async Task DeleteCustomerAsync(CustomerModel customer)
+    public async Task DeleteCustomerAsync(CustomerEntity customer)
     {
         Console.Write("Are you sure y/n: ");
         var option = Console.ReadLine()!.ToLower();
 
         if (option == "y")
         {
-            var result = await _customerService.DeleteAsync(customer);
+            var addressEntity = new AddressEntity
+            {
+                Id = customer.Address.Id,
+                StreetName = customer.Address.StreetName,
+                StreetNumber = customer.Address.StreetNumber,
+                PostalCode = customer.Address.PostalCode,
+                City = customer.Address.City,
+            };
+
+            var result = await _customerService.DeleteAsync(customer,addressEntity);
 
             if (result == true)
             {
@@ -190,28 +207,28 @@ internal class CustomerMenu
 
         Console.WriteLine("----Create Customer----");
 
-        Console.WriteLine("First Name: ");
+        Console.Write("First Name: ");
         customerReg.FirstName = Console.ReadLine()!;
 
-        Console.WriteLine("Last Name: ");
+        Console.Write("Last Name: ");
         customerReg.LastName = Console.ReadLine()!;
 
-        Console.WriteLine("Email: ");
+        Console.Write("Email: ");
         customerReg.Email = Console.ReadLine()!;
 
-        Console.WriteLine("Phone Number: ");
+        Console.Write("Phone Number: ");
         customerReg.PhoneNumber = Console.ReadLine()!;
 
-        Console.WriteLine("Street Name: ");
+        Console.Write("Street Name: ");
         customerReg.StreetName = Console.ReadLine()!;
 
-        Console.WriteLine("Street Number: ");
+        Console.Write("Street Number: ");
         customerReg.StreetNumber = Console.ReadLine()!;
 
-        Console.WriteLine("Postal Code: ");
+        Console.Write("Postal Code: ");
         customerReg.PostalCode = Console.ReadLine()!;
 
-        Console.WriteLine("City: ");
+        Console.Write("City: ");
         customerReg.City = Console.ReadLine()!;
 
         var result = await _customerService.CreateAsync(customerReg);

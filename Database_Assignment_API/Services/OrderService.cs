@@ -11,19 +11,19 @@ public interface IOrderService
 {
     Task<bool> CreateOrderAsync(OrderRegistration orderRegistration);
     Task<OrderRowEntity> CreateOrderRowAsync(OrderEntity orderEntity, OrderRowRegistration orderRowRegistration);
-    Task<IEnumerable<OrderModel>> GetAllAsync();
-    Task<OrderModel> GetOneAsync(Expression<Func<OrderEntity, bool>> predicate);
-    Task<bool> DeleteAsync(OrderModel orderModel);
+    Task<IEnumerable<OrderRowEntity>> GetAllAsync();
+    Task<OrderEntity> GetOneAsync(Expression<Func<OrderEntity, bool>> predicate);
+    Task<bool> DeleteAsync(OrderEntity orderEntity);
 }
 
 public class OrderService : IOrderService
 {
-    private readonly OrderRepository _orderRepository;
-    private readonly OrderRowRepository _orderRowRepository;
-    private readonly CustomerService _customerService;
-    private readonly ProductService _productService;
+    private readonly IOrderRepository _orderRepository;
+    private readonly IOrderRowRepository _orderRowRepository;
+    private readonly ICustomerService _customerService;
+    private readonly IProductService _productService;
 
-    public OrderService(OrderRepository orderRepository, OrderRowRepository orderRowRepository, CustomerService customerService, ProductService productService)
+    public OrderService(IOrderRepository orderRepository, IOrderRowRepository orderRowRepository, ICustomerService customerService, IProductService productService)
     {
         _orderRepository = orderRepository;
         _orderRowRepository = orderRowRepository;
@@ -34,7 +34,7 @@ public class OrderService : IOrderService
     public async Task<bool> CreateOrderAsync(OrderRegistration orderRegistration)
     {
         try
-        { 
+        {
             var customerId = (await _customerService.GetOneAsync(x => x.Email == orderRegistration.CustomerEmail)).Id;
 
             var orderEntity = new OrderEntity
@@ -48,16 +48,9 @@ public class OrderService : IOrderService
 
             orderEntity = await _orderRepository.CreateAsync(orderEntity);
 
-            foreach(var orderRow in orderRegistration.Rows)
+            foreach (var orderRow in orderRegistration.Rows)
             {
-                if(!await _orderRowRepository.ExistsAsync(x => x.ProductArticleNumber == orderRow.ProductArticleNumber && x.OrderId == orderEntity.Id))
-                {
-                    var orderRowEntity = await CreateOrderRowAsync(orderEntity, orderRow);
-                }
-                else
-                {
-                    return false;
-                }
+                var orderRowEntity = await CreateOrderRowAsync(orderEntity, orderRow);
             }
 
             return true;
@@ -89,13 +82,14 @@ public class OrderService : IOrderService
         return null!;
     }
 
-    public async Task<IEnumerable<OrderModel>> GetAllAsync()
+    public async Task<IEnumerable<OrderRowEntity>> GetAllAsync()
     {
         try
         {
-            var order = await _orderRowRepository.GetAllAsync();
+            var orders = await _orderRowRepository.GetAllAsync();
 
-            return order.Select(x => new OrderModel()).ToList();
+
+            return orders;
         }
 
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
@@ -103,62 +97,26 @@ public class OrderService : IOrderService
         return null!;
     }
 
-    public async Task<OrderModel> GetOneAsync(Expression<Func<OrderEntity, bool>> predicate)
+    public async Task<OrderEntity> GetOneAsync(Expression<Func<OrderEntity, bool>> predicate)
     {
         try
         {
-            var entity = await _orderRepository.GetAsync(predicate);
+            var order = await _orderRepository.GetAsync(predicate);
 
-            var orderRows = await _orderRowRepository.GetAllAsync();
-
-            orderRows.Select(x => x.OrderId == entity.Id).ToList();
-
-            if (entity != null)
-            {
-                var order = new OrderModel
-                {
-                    OrderDate = entity.OrderDate,
-                    DueDate = entity.DueDate,
-                    TotalPrice = entity.TotalPrice,
-                    VAT = entity.VAT,
-
-                    CustomerEmail = entity.Customer.Email,
-                };
-
-                foreach (var row in orderRows)
-                {
-                    var orderRowModel = new OrderRowModel
-                    {
-                        ProductArticleNumber = row.ProductArticleNumber,
-                        Quantity = row.Quantity,
-                        Price = row.Price,
-                    };
-
-                    order.Rows.Add(orderRowModel);
-                }
-            }
-        }
-        catch (Exception ex) { Debug.WriteLine(ex.Message); }
-
-        return null!;
-    }
-    public async Task<OrderRowEntity> GetOneRowAsync(Expression<Func<OrderRowEntity, bool>> predicate)
-    {
-        try
-        {
-            var orderRowEntity = await _orderRowRepository.GetAsync(predicate);
-            return orderRowEntity;
+            return order;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return null!;
     }
 
-    public async Task<bool> DeleteAsync(OrderModel orderModel)
+    
+
+    public async Task<bool> DeleteAsync(OrderEntity orderEntity)
     {
         try
         {
-            foreach (var rows in orderModel.Rows)
+            foreach (var rows in orderEntity.OrderRows)
             {
                 var orderRowEntity = new OrderRowEntity
                 {
@@ -171,16 +129,6 @@ public class OrderService : IOrderService
                 await _orderRowRepository.DeleteAsync(orderRowEntity);
             }
 
-            var orderEntity = new OrderEntity
-            {
-                Id = orderModel.Id,
-                OrderDate = orderModel.OrderDate,
-                DueDate = orderModel.DueDate,
-                TotalPrice = orderModel.TotalPrice,
-                VAT = orderModel.VAT,
-                CustomerId = (_customerService.GetOneAsync(x => x.Email == orderModel.CustomerEmail)).Id,
-            };
-
             await _orderRepository.DeleteAsync(orderEntity);
 
             return true;
@@ -188,5 +136,11 @@ public class OrderService : IOrderService
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return false;
+    }
+
+    public async Task<bool> OrderRowExistsAsync(Expression<Func<OrderRowEntity,bool>> predicate)
+    {
+        var result = await _orderRowRepository.ExistsAsync(predicate);
+        return result;
     }
 }

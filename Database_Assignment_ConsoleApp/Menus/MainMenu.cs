@@ -1,6 +1,6 @@
 ﻿namespace Database_Assignment_ConsoleApp.Menus;
 
-internal class MainMenu
+public class MainMenu
 {
     private readonly CustomerMenu _customerMenu;
     private readonly ProductMenu _productMenu;

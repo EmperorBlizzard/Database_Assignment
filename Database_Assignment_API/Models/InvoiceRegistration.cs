@@ -2,6 +2,7 @@
 
 public class InvoiceRegistration
 {
+    public int OrderId { get; set; }
     public DateTime OrderDate { get; set; } = DateTime.Now;
     public DateTime DueDate { get; set; } = DateTime.Now.AddDays(30);
 
@@ -13,8 +14,4 @@ public class InvoiceRegistration
 
     public decimal TotalAmount { get; set; }
     public decimal VAT { get; set; }
-
-    public string ProductArticleNumber { get; set; } = null!;
-    public int Quantity { get; set; }
-    public decimal Price { get; set; }
 }

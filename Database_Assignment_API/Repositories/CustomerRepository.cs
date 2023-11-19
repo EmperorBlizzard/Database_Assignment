@@ -1,6 +1,7 @@
 ﻿using Database_Assignment_API.Contexts;
 using Database_Assignment_API.Entites;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Database_Assignment_API.Repositories
 {
@@ -19,6 +20,13 @@ namespace Database_Assignment_API.Repositories
         public override async Task<IEnumerable<CustomerEntity>> GetAllAsync()
         {
             return await _context.Customers.Include(x => x.Address).ToListAsync();
+        }
+
+        public override async Task<CustomerEntity> GetAsync(Expression<Func<CustomerEntity, bool>> expression)
+        {
+            var result = await base.GetAsync(expression);
+            var customer = await _context.Customers.Include(x => x.Address).FirstOrDefaultAsync();
+            return customer!;
         }
     }
 }

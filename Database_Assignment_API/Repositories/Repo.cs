@@ -72,8 +72,6 @@ public abstract class Repo<TEntity> : IRepo<TEntity> where TEntity : class
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
         return null!;
-
-
     }
 
     public virtual async Task<bool> DeleteAsync(TEntity entity)

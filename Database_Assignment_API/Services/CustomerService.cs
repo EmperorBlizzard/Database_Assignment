@@ -10,10 +10,10 @@ namespace Database_Assignment_API.Services;
 public interface ICustomerService
 {
     Task<bool> CreateAsync(ICustomerRegistration registration);
-    Task<IEnumerable<CustomerModel>> GetAllAsync();
-    Task<CustomerModel> GetOneAsync(Expression<Func<CustomerEntity, bool>> predicate);
-    Task<bool> UpdateAsync(CustomerModel customerModel);
-    Task<bool> DeleteAsync(CustomerModel customerModel);
+    Task<IEnumerable<CustomerEntity>> GetAllAsync();
+    Task<CustomerEntity> GetOneAsync(Expression<Func<CustomerEntity, bool>> predicate);
+    Task<bool> UpdateAsync(CustomerEntity customerEntity);
+    Task<bool> DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity);
     Task<bool> ExistsAsync(Expression<Func<CustomerEntity, bool>> predicate);
 }
 
@@ -57,20 +57,20 @@ public class CustomerService : ICustomerService
         return false;
     }
 
-    public async Task<IEnumerable<CustomerModel>> GetAllAsync()
+    public async Task<IEnumerable<CustomerEntity>> GetAllAsync()
     {
         try
         {
             var customers = await _customerRepo.GetAllAsync();
 
-            return customers.Select(x => new CustomerModel()).ToList();
+            return customers;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return null!;
     }
 
-    public async Task<CustomerModel> GetOneAsync(Expression<Func<CustomerEntity, bool>> predicate)
+    public async Task<CustomerEntity> GetOneAsync(Expression<Func<CustomerEntity, bool>> predicate)
     {
         try
         {
@@ -78,21 +78,7 @@ public class CustomerService : ICustomerService
             
             if (entity != null)
             {
-                var customer = new CustomerModel
-                {
-                    Id = entity.Id,
-                    FirstName = entity.FirstName,
-                    LastName = entity.LastName,
-                    Email = entity.Email,
-                    PhoneNumber = entity.PhoneNumber,
-                    AddressId = entity.AddressId,
-                    StreetName = entity.Address.StreetName,
-                    StreetNumber = entity.Address.StreetNumber,
-                    PostalCode = entity.Address.PostalCode,
-                    City = entity.Address.City
-                };
-
-                return customer;
+                return entity;
             }
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
@@ -100,34 +86,19 @@ public class CustomerService : ICustomerService
         return null!;
     }
 
-    public async Task<bool> UpdateAsync(CustomerModel customerModel)
+    public async Task<bool> UpdateAsync(CustomerEntity customerEntity)
     {
         try
         {
-            if( await _customerRepo.ExistsAsync(x => x.Email == customerModel.Email))
+            if(! await _customerRepo.ExistsAsync(x => x.Email == customerEntity.Email))
             {
-                var customerEntity = new CustomerEntity
+               
+                var result1 = await _customerRepo.UpdateAsync(customerEntity);
+
+                if(result1 != null)
                 {
-                    Id = customerModel.Id,
-                    FirstName = customerModel.FirstName,
-                    LastName = customerModel.LastName,
-                    Email = customerModel.Email,
-                    PhoneNumber = customerModel.PhoneNumber
-                };
-
-                var addressEntity = new AddressEntity
-                {
-                    Id = customerModel.AddressId,
-                    StreetName = customerModel.StreetName,
-                    StreetNumber = customerModel.StreetNumber,
-                    PostalCode = customerModel.PostalCode,
-                    City = customerModel.City
-                };
-
-
-                await _addressRepo.UpdateAsync(addressEntity);
-                await _customerRepo.UpdateAsync(customerEntity);
-                return true;
+                    return true;
+                }
             }
 
         }
@@ -136,30 +107,16 @@ public class CustomerService : ICustomerService
         return false;
     }
 
-    public async Task<bool> DeleteAsync(CustomerModel customerModel)
+    public async Task<bool> DeleteAsync(CustomerEntity customerEntity, AddressEntity addressEntity)
     {
         try
         {
-            var customerEntity = new CustomerEntity
-            {
-                Id = customerModel.Id,
-                FirstName = customerModel.FirstName,
-                LastName = customerModel.LastName,
-                Email = customerModel.Email,
-                PhoneNumber = customerModel.PhoneNumber
-            };
-
-            var addressEntity = new AddressEntity
-            {
-                Id = customerModel.AddressId,
-                StreetName = customerModel.StreetName,
-                StreetNumber = customerModel.StreetNumber,
-                PostalCode = customerModel.PostalCode,
-                City = customerModel.City
-            };
-
             await _customerRepo.DeleteAsync(customerEntity);
-            await _addressRepo.DeleteAsync(addressEntity);
+            if(!await _customerRepo.ExistsAsync(x => x.AddressId == addressEntity.Id))
+            {
+                await _addressRepo.DeleteAsync(addressEntity);
+            }
+
             return true;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }

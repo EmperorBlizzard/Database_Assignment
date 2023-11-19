@@ -1,16 +1,17 @@
-﻿using Database_Assignment_API.Models;
+﻿using Database_Assignment_API.Entites;
+using Database_Assignment_API.Models;
 using Database_Assignment_API.Services;
 
 namespace Database_Assignment_ConsoleApp.Menus;
 
-internal class ProductMenu
+public class ProductMenu
 {
-    private readonly ProductService _productService;
-    private readonly SubCategoryService _subCategoryService;
-    private readonly CategoryService _categoryService;
+    private readonly IProductService _productService;
+    private readonly ISubCategoryService _subCategoryService;
+    private readonly ICategoryService _categoryService;
     private readonly CategoryMenu _categoryMenu;
 
-    public ProductMenu(ProductService productService, SubCategoryService subcategoryService, CategoryService categoryService, CategoryMenu categoryMenu)
+    public ProductMenu(IProductService productService, ISubCategoryService subcategoryService, ICategoryService categoryService, CategoryMenu categoryMenu)
     {
         _productService = productService;
         _subCategoryService = subcategoryService;
@@ -72,7 +73,8 @@ internal class ProductMenu
         foreach (var product in products)
         {
             Console.WriteLine();
-            Console.WriteLine($"{product.Name} - {product.CategoryName}");
+            Console.WriteLine($"Article Number: {product.ArticleNumber}");
+            Console.WriteLine($"{product.Name} - {product.SubCategory.PrimaryCategory.CategoryName} - {product.SubCategory.SubCategoryName}");
             Console.WriteLine($"{product.StockPrice}");
         }
 
@@ -91,15 +93,15 @@ internal class ProductMenu
         Console.Write("Article Number: ");
         var articleNumber = Console.ReadLine();
 
-        ProductModel product = await _productService.GetOneAsync(x => x.ArticleNumber == articleNumber);
+        var product = await _productService.GetOneAsync(x => x.ArticleNumber == articleNumber);
 
         if (product != null)
         {
             Console.WriteLine($"Name: {product.Name}");
             Console.WriteLine($"Price: {product.StockPrice} kr");
             Console.WriteLine($"Description: {product.Description}");
-            Console.WriteLine($"Stock: {product.StockQuantity} st.");
-            Console.WriteLine($"Category: {product.CategoryName} - {product.SubCategoryName}");
+            Console.WriteLine($"Stock: {product.Stock.StockQuantity} st.");
+            Console.WriteLine($"Category: {product.SubCategory.PrimaryCategory.CategoryName} - {product.SubCategory.SubCategoryName}");
             Console.WriteLine($"");
 
             Console.WriteLine("1. Edit Product");
@@ -134,27 +136,27 @@ internal class ProductMenu
         }
     }
 
-    public async Task EditProductAsync(ProductModel productModel)
+    public async Task EditProductAsync(ProductEntity productEntity)
     {
         Console.WriteLine("----Edit----");
 
-        Console.WriteLine("Name: ");
-        productModel.Name = Console.ReadLine()!;
+        Console.Write("Name: ");
+        productEntity.Name = Console.ReadLine()!;
 
-        Console.WriteLine("Description: ");
-        productModel.Description = Console.ReadLine()!;
+        Console.Write("Description: ");
+        productEntity.Description = Console.ReadLine()!;
 
-        Console.WriteLine("Price: ");
-        productModel.StockPrice = decimal.Parse(Console.ReadLine()!);
+        Console.Write("Price: ");
+        productEntity.StockPrice = decimal.Parse(Console.ReadLine()!);
 
-        Console.WriteLine("Subcategory Name: ");
-        productModel.SubCategoryName = Console.ReadLine()!;
+        Console.Write("Subcategory Name: ");
+        productEntity.SubCategory.SubCategoryName = Console.ReadLine()!;
 
-        var result = await _productService.UpdateAsync(productModel);
+        var result = await _productService.UpdateAsync(productEntity);
 
         if (result == true)
         {
-            Console.WriteLine("Customer Updated");
+            Console.WriteLine("Product Updated");
         }
         else
         {
@@ -164,18 +166,22 @@ internal class ProductMenu
         Console.ReadKey();
     }
 
-    public async Task DeleteProductAsync(ProductModel productModel)
+    public async Task DeleteProductAsync(ProductEntity productEntity)
     {
         Console.Write("Are you sure y/n: ");
         var option = Console.ReadLine()!.ToLower();
 
         if (option == "y")
         {
-            var result = await _productService.DeleteAsync(productModel);
+            var inStockEntity = new InStockEntity();
+
+            inStockEntity = productEntity.Stock;
+
+            var result = await _productService.DeleteAsync(productEntity,inStockEntity);
 
             if (result == true)
             {
-                Console.WriteLine("Customer delete");
+                Console.WriteLine("Product delete");
             }
             else
             {
@@ -186,16 +192,16 @@ internal class ProductMenu
         }
     }
 
-    public async Task AddToStockAsync(ProductModel productModel)
+    public async Task AddToStockAsync(ProductEntity productEntity)
     {
         Console.Write("How many should be added: ");
-        productModel.StockQuantity += int.Parse(Console.ReadLine()!);
+        productEntity.Stock.StockQuantity += int.Parse(Console.ReadLine()!);
 
-        var result = await _productService.UpdateStockAsync(productModel);
+        var result = await _productService.UpdateStockAsync(productEntity);
 
         if (result == true)
         {
-            Console.WriteLine("Customer delete");
+            Console.WriteLine("Stock Updated");
         }
         else
         {
@@ -213,19 +219,22 @@ internal class ProductMenu
 
         Console.WriteLine("----Create Product----");
 
-        Console.WriteLine("Name: ");
+        Console.Write("Article Number: ");
+        productReg.ArticleNumber = Console.ReadLine()!;
+
+        Console.Write("Name: ");
         productReg.Name = Console.ReadLine()!;
 
-        Console.WriteLine("Description: ");
+        Console.Write("Description: ");
         productReg.Description = Console.ReadLine()!;
 
-        Console.WriteLine("Price: ");
+        Console.Write("Price: ");
         productReg.StockPrice = decimal.Parse(Console.ReadLine()!);
 
-        Console.WriteLine("Stock: ");
+        Console.Write("Stock: ");
         productReg.StockQuantity = int.Parse(Console.ReadLine()!);
 
-        Console.WriteLine("Subcategory Name: ");
+        Console.Write("Subcategory Name: ");
         productReg.SubCategoryName = Console.ReadLine()!;
 
 
@@ -243,6 +252,4 @@ internal class ProductMenu
 
         Console.ReadKey();
     }
-
-    
 }

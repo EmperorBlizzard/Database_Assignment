@@ -9,19 +9,21 @@ namespace Database_Assignment_API.Services;
 public interface ISubCategoryService
 {
     Task<bool> CreateAsync(SubCategoryRegistration subCategoryRegistration);
-    Task<IEnumerable<SubCategoryModel>> GetAllAsync();
-    Task<SubCategoryModel> GetOneAsync(Expression<Func<SubCategoryEntity, bool>> predicate);
-    Task<bool> UpdateAsync(SubCategoryModel subCategoryModel);
-    Task<bool> DeleteAsync(SubCategoryModel subCategoryModel);
+    Task<IEnumerable<SubCategoryEntity>> GetAllAsync();
+    Task<SubCategoryEntity> GetOneAsync(Expression<Func<SubCategoryEntity, bool>> predicate);
+    Task<bool> UpdateAsync(SubCategoryEntity subCategoryEntity);
+    Task<bool> DeleteAsync(SubCategoryEntity subCategoryEntity);
 }
 
 public class SubCategoryService : ISubCategoryService
 {
-    private readonly SubCategoryRepository _subCategoryRepository;
+    private readonly ISubCategoryRepository _subCategoryRepository;
+    private readonly IPrimaryCategoryRepository _primaryCategoryRepository;
 
-    public SubCategoryService(SubCategoryRepository subCategoryRepository)
+    public SubCategoryService(ISubCategoryRepository subCategoryRepository, IPrimaryCategoryRepository primaryCategoryRepository)
     {
         _subCategoryRepository = subCategoryRepository;
+        _primaryCategoryRepository = primaryCategoryRepository;
     }
 
     public async Task<bool> CreateAsync(SubCategoryRegistration subCategoryRegistration)
@@ -30,9 +32,12 @@ public class SubCategoryService : ISubCategoryService
         {
             if (!await _subCategoryRepository.ExistsAsync(x => x.SubCategoryName == subCategoryRegistration.SubCategoryName))
             {
+                var primaryCategoryId = (await _primaryCategoryRepository.GetAsync(x => x.CategoryName == subCategoryRegistration.CategoryName)).Id;
+
                 var subCategoryEntity = new SubCategoryEntity
                 {
-                    SubCategoryName = subCategoryRegistration.SubCategoryName
+                    SubCategoryName = subCategoryRegistration.SubCategoryName,
+                    PrimaryCategoryId = primaryCategoryId
                 };
 
                 subCategoryEntity = await _subCategoryRepository.CreateAsync(subCategoryEntity);
@@ -45,30 +50,25 @@ public class SubCategoryService : ISubCategoryService
         return false;
     }
 
-    public async Task<IEnumerable<SubCategoryModel>> GetAllAsync()
+    public async Task<IEnumerable<SubCategoryEntity>> GetAllAsync()
     {
         try
         {
             var categories = await _subCategoryRepository.GetAllAsync();
-            return categories.Select(x => new SubCategoryModel()).ToList();
+
+            return categories;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
         return null!;
     }
 
-    public async Task<SubCategoryModel> GetOneAsync(Expression<Func<SubCategoryEntity, bool>> predicate)
+    public async Task<SubCategoryEntity> GetOneAsync(Expression<Func<SubCategoryEntity, bool>> predicate)
     {
         try
         {
-            var categoryEntity = await _subCategoryRepository.GetAsync(predicate);
+            var category = await _subCategoryRepository.GetAsync(predicate);
 
-            var category = new SubCategoryModel
-            {
-                Id = categoryEntity.Id,
-                SubCategoryName = categoryEntity.SubCategoryName,
-                CategoryName = categoryEntity.PrimaryCategory.CategoryName
-            };
 
             return category;
         }
@@ -77,17 +77,10 @@ public class SubCategoryService : ISubCategoryService
         return null!;
     }
 
-    public async Task<bool> UpdateAsync(SubCategoryModel subCategoryModel)
+    public async Task<bool> UpdateAsync(SubCategoryEntity subCategoryEntity)
     {
         try
         {
-            var subCategoryEntity = new SubCategoryEntity
-            {
-                Id= subCategoryModel.Id,
-                SubCategoryName= subCategoryModel.SubCategoryName,
-                PrimaryCategoryId = subCategoryModel.PrimaryCategoryId,
-            };
-
             await _subCategoryRepository.UpdateAsync(subCategoryEntity);
             return true;
         }
@@ -96,17 +89,10 @@ public class SubCategoryService : ISubCategoryService
         return false;
     }
 
-    public async Task<bool> DeleteAsync(SubCategoryModel subCategoryModel)
+    public async Task<bool> DeleteAsync(SubCategoryEntity subCategoryEntity)
     {
         try
         {
-            var subCategoryEntity = new SubCategoryEntity
-            {
-                Id = subCategoryModel.Id,
-                SubCategoryName = subCategoryModel.SubCategoryName,
-                PrimaryCategoryId = subCategoryModel.PrimaryCategoryId,
-            };
-
             await _subCategoryRepository.DeleteAsync(subCategoryEntity);
             return true;
         }
