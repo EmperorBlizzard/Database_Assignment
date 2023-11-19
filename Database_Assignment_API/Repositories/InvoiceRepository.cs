@@ -20,7 +20,7 @@ public class InvoiceRepository : Repo<InvoiceEntity>, IInvoiceRepository
     public override async Task<InvoiceEntity> GetAsync(Expression<Func<InvoiceEntity, bool>> expression)
     {
         var result = await base.GetAsync(expression);
-        var invoice = await _context.Invoices.Include(x => x.InvoiceLines).FirstOrDefaultAsync();
+        var invoice = await _context.Invoices.Include(x => x.InvoiceLines).FirstOrDefaultAsync(x => x.Id == result.Id);
         return invoice!;
     }
 }

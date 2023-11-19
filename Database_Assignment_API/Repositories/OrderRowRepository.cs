@@ -19,7 +19,10 @@ namespace Database_Assignment_API.Repositories
 
         public override async Task<IEnumerable<OrderRowEntity>> GetAllAsync()
         {
-            return await _context.OrderRows.Include(x => x.Order).ToListAsync();
+            return await _context.OrderRows
+                .Include(x => x.Order)
+                .ThenInclude(x => x.Customer)
+                .ToListAsync();
         }
 
 

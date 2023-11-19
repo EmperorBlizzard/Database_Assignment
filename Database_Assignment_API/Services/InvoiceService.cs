@@ -10,7 +10,7 @@ public interface IInvoiceService
 {
     Task<bool> CreateAsync(OrderRegistration orderRegistration);
     Task<InvoiceLineEntity> CreateInvoiceLine(InvoiceEntity invoiceEntity, OrderRowRegistration orderRowRegistration);
-    Task<IEnumerable<InvoiceLineEntity>> GetAllAsync();
+    Task<IEnumerable<InvoiceEntity>> GetAllAsync();
     Task<InvoiceEntity> GetOneAsync(Expression<Func<InvoiceEntity, bool>> predicate);
     //Task<bool> DeleteAsync(InvoiceEntity invoiceEntity, InvoiceLineEntity invoiceLineEntity);
 }
@@ -76,11 +76,11 @@ public class InvoiceService : IInvoiceService
         return invoiceLine;
     }
 
-    public async Task<IEnumerable<InvoiceLineEntity>> GetAllAsync()
+    public async Task<IEnumerable<InvoiceEntity>> GetAllAsync()
     {
         try
         {
-            var invoices = await _invoiceLineRepository.GetAllAsync();
+            var invoices = await _invoiceRepository.GetAllAsync();
 
             return invoices;
         }

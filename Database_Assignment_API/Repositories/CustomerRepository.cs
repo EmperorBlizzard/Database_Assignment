@@ -25,7 +25,7 @@ namespace Database_Assignment_API.Repositories
         public override async Task<CustomerEntity> GetAsync(Expression<Func<CustomerEntity, bool>> expression)
         {
             var result = await base.GetAsync(expression);
-            var customer = await _context.Customers.Include(x => x.Address).FirstOrDefaultAsync();
+            var customer = await _context.Customers.Include(x => x.Address).FirstOrDefaultAsync(x => x.Id == result.Id);
             return customer!;
         }
     }

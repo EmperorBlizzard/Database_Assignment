@@ -73,7 +73,7 @@ public class OrderMenu
         foreach (var order in orders)
         {
             Console.WriteLine();
-            Console.WriteLine($"{order.OrderId} - {order.Order.TotalPrice:0.00}");
+            Console.WriteLine($"{order.Id} - {order.Customer.FirstName} - {order.TotalPrice:0.00} kr");
         }
 
         Console.WriteLine();
@@ -169,7 +169,7 @@ public class OrderMenu
         foreach (var invoice in invoices)
         {
             Console.WriteLine($"");
-            Console.WriteLine($"{invoice.Invoice.Id} - {invoice.Invoice.CustomerNumber} - {invoice.Invoice.CustomerName}");
+            Console.WriteLine($"{invoice.Id} - {invoice.CustomerNumber} - {invoice.CustomerName}");
         }
 
         Console.WriteLine();
@@ -205,10 +205,11 @@ public class OrderMenu
             Console.WriteLine($"Total price: {invoice.TotalAmount:0.00} kr");
             Console.WriteLine($"VAT: {invoice.VAT:0.00}");
 
+            Console.WriteLine($"");
+            Console.WriteLine($"Products: ");
             foreach (var line in invoice.InvoiceLines)
             {
                 Console.WriteLine($"");
-                Console.WriteLine($"Products: ");
                 Console.WriteLine($"Article Number: {line.ProductArticleNumber}");
                 Console.WriteLine($"Quantity: {line.Quantity} st");
                 Console.WriteLine($"Price: {line.Price:0.00} kr");
@@ -354,7 +355,11 @@ public class OrderMenu
                 var result = await _orderService.CreateOrderAsync(orderReg);
                 if (result == true)
                 {
-                    var invoiceResult = _invoiceService.CreateAsync(orderReg);
+                    var invoiceResult = await _invoiceService.CreateAsync(orderReg);
+                    if (invoiceResult == false)
+                    {
+                        Console.WriteLine("Invoice problem");
+                    }
 
                     foreach (var row in orderReg.Rows)
                     {

@@ -11,7 +11,7 @@ public interface IOrderService
 {
     Task<bool> CreateOrderAsync(OrderRegistration orderRegistration);
     Task<OrderRowEntity> CreateOrderRowAsync(OrderEntity orderEntity, OrderRowRegistration orderRowRegistration);
-    Task<IEnumerable<OrderRowEntity>> GetAllAsync();
+    Task<IEnumerable<OrderEntity>> GetAllAsync();
     Task<OrderEntity> GetOneAsync(Expression<Func<OrderEntity, bool>> predicate);
     Task<bool> DeleteAsync(OrderEntity orderEntity);
 }
@@ -82,11 +82,11 @@ public class OrderService : IOrderService
         return null!;
     }
 
-    public async Task<IEnumerable<OrderRowEntity>> GetAllAsync()
+    public async Task<IEnumerable<OrderEntity>> GetAllAsync()
     {
         try
         {
-            var orders = await _orderRowRepository.GetAllAsync();
+            var orders = await _orderRepository.GetAllAsync();
 
 
             return orders;

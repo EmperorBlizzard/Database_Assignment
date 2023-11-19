@@ -20,13 +20,19 @@ namespace Database_Assignment_API.Repositories
 
         public override async Task<IEnumerable<OrderEntity>> GetAllAsync()
         {
-            return await _context.Orders.Include(x => x.OrderRows).ToListAsync();
+            return await _context.Orders
+                .Include(x => x.OrderRows)
+                .Include(x => x.Customer)
+                .ToListAsync();
         }
 
         public override async Task<OrderEntity> GetAsync(Expression<Func<OrderEntity, bool>> expression)
         {
             var result = await base.GetAsync(expression);
-            var order = await _context.Orders.Include(x => x.OrderRows).FirstOrDefaultAsync(x => x.Id == result.Id);
+            var order = await _context.Orders
+                .Include(x => x.OrderRows)
+                .Include(x => x.Customer)
+                .FirstOrDefaultAsync(x => x.Id == result.Id);
             return order!;
         }
     }
