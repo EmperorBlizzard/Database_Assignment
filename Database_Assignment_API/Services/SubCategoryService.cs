@@ -8,7 +8,7 @@ namespace Database_Assignment_API.Services;
 
 public interface ISubCategoryService
 {
-    Task<bool> CreateAsync(SubCategoryRegistration subCategoryRegistration);
+    Task<bool> CreateAsync(ISubCategoryRegistration subCategoryRegistration);
     Task<IEnumerable<SubCategoryEntity>> GetAllAsync();
     Task<SubCategoryEntity> GetOneAsync(Expression<Func<SubCategoryEntity, bool>> predicate);
     Task<bool> UpdateAsync(SubCategoryEntity subCategoryEntity);
@@ -26,18 +26,18 @@ public class SubCategoryService : ISubCategoryService
         _primaryCategoryRepository = primaryCategoryRepository;
     }
 
-    public async Task<bool> CreateAsync(SubCategoryRegistration subCategoryRegistration)
+    public async Task<bool> CreateAsync(ISubCategoryRegistration subCategoryRegistration)
     {
         try
         {
             if (!await _subCategoryRepository.ExistsAsync(x => x.SubCategoryName == subCategoryRegistration.SubCategoryName))
             {
-                var primaryCategoryId = (await _primaryCategoryRepository.GetAsync(x => x.CategoryName == subCategoryRegistration.CategoryName)).Id;
+                var primaryCategoryEntity = (await _primaryCategoryRepository.GetAsync(x => x.CategoryName == subCategoryRegistration.CategoryName));
 
                 var subCategoryEntity = new SubCategoryEntity
                 {
                     SubCategoryName = subCategoryRegistration.SubCategoryName,
-                    PrimaryCategoryId = primaryCategoryId
+                    PrimaryCategoryId = primaryCategoryEntity.Id
                 };
 
                 subCategoryEntity = await _subCategoryRepository.CreateAsync(subCategoryEntity);
